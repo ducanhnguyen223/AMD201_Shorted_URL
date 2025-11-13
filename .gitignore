@@ -41,3 +41,7 @@
 *.db
 *.sqlite
 *.sqlite-journal
+
+# Project-specific ignores
+AMD201_Merterial/
+report/
