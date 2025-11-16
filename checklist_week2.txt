@@ -6,5 +6,5 @@ CHECKLIST CÔNG VIỆC CỦA LEADER (TUẦN 2)
   - [x] Setup cấu trúc CQRS (tạo các thư mục cho Commands, Queries).
   - [x] Implement logic sinh mã rút gọn (Base62).
   - [x] Implement Command để lưu link vào SQL Database.
-- [ ] **Cấu hình Gateway:**
-  - [ ] Thêm xác thực JWT vào các route cần bảo vệ trên Ocelot.
+- [x] **Cấu hình Gateway:**
+  - [x] Thêm xác thực JWT vào các route cần bảo vệ trên Ocelot.

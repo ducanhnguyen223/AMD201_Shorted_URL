@@ -58,19 +58,33 @@ Báo cáo các hành động đã thực hiện:
 
 **11. Phát triển ShortenerService (Command Side - Write):**
     - **Hành động:** Đã tạo project `ShortenerService` trong Visual Studio.
-    - **Hành động:** Đã cài đặt các gói NuGet cần thiết (EF Core, MediatR, Npgsql.EntityFrameworkCore.PostgreSQL, Swashbuckle.AspNetCore).
+    - **Hành động:** Đã cài đặt các gói NuGet cần thiết (EF Core, MediatR, `Microsoft.EntityFrameworkCore.SqlServer`, Swashbuckle.AspNetCore, `Microsoft.EntityFrameworkCore.Tools`).
     - **Hành động:** Đã khắc phục lỗi: thay thế `Npgsql.EntityFrameworkCore.PostgreSQL` bằng `Microsoft.EntityFrameworkCore.SqlServer` do dùng SQL Server.
     - **Hành động:** Đã setup cấu trúc CQRS (thư mục Features/Commands, Queries).
     - **Hành động:** Đã implement logic sinh mã rút gọn (Base62) trong `UrlShorteningService.cs`.
     - **Hành động:** Đã định nghĩa `ShortenedUrl` Entity và `ApplicationDbContext`.
-    - **Hành động:** Đã cấu hình Connection String trong `appsettings.json` và `appsettings.Development.json` (sửa từ `localhost` thành `192.168.1.41` - IP của Arch Linux host).
+    - **Hành động:** Đã cấu hình Connection String trong `appsettings.json` và `appsettings.Development.json` (sửa từ `localhost` thành `192.168.1.41` - IP của Arch Linux host) để kết nối đúng đến Docker host.
     - **Hành động:** Đã đăng ký `ApplicationDbContext`, `IUrlShorteningService`, và MediatR trong `Program.cs`.
     - **Hành động:** Đã tạo và áp dụng Migration (`InitialCreate`, `RenameCreateAtToCreatedAt`) để đồng bộ schema database.
     - **Hành động:** Đã tạo `CreateShortenedUrlCommand` và `CreateShortenedUrlCommandHandler`.
     - **Hành động:** Đã tạo `CreateShortUrlRequest` DTO và `ShortenerController` với endpoint `/api/shorten`.
     - **Hành động:** Đã khắc phục lỗi typo: `CreateShortendUrlCommand` thành `CreateShortenedUrlCommand` và `CreateAt` thành `CreatedAt`.
-    - **Hành động:** Đã khắc phục lỗi kết nối SQL Server kéo dài do hiểu nhầm môi trường Docker host (Arch Linux) và client (Windows/winboat) bằng cách sử dụng IP trực tiếp `192.168.1.41` trong Connection String.
-    - **Hành động:** Đã chạy và test thành công API `POST /api/shorten`.
+    - **Hành động:** Đã khắc phục lỗi `dotnet ef` connection refused bằng cách chuyển Connection String sang IP của Docker host (192.168.1.41) và giải thích môi trường Arch Linux/Winboat.
+    - **Hành động:** Đã chạy và test thành công API `POST /api/shorten` độc lập.
+
+**12. Cấu hình JWT Authentication trên API Gateway và Test:**
+    - **Hành động:** Đã cài đặt gói NuGet `Microsoft.AspNetCore.Authentication.JwtBearer` cho dự án `ApiGateway`.
+    - **Hành động:** Đã thêm cấu hình `JwtSettings` vào `ApiGateway/appsettings.json`.
+    - **Hành động:** Đã cập nhật `ApiGateway/Program.cs` để thêm dịch vụ xác thực JWT, cấu hình `JwtBearer` và sử dụng `UseAuthentication()` middleware.
+    - **Hành động:** Đã thêm endpoint tạm thời `/get-token` vào `ApiGateway` để tạo JWT token test.
+    - **Hành động:** Đã cập nhật `ApiGateway/ocelot.json` để bảo vệ route `POST /api/shorten` và các route liên quan đến URL Service bằng `AuthenticationOptions`.
+    - **Hành động:** Đã khắc phục nhiều lỗi liên quan đến cấu hình Swagger Aggregation (MMLib.SwaggerForOcelot) bằng cách tạm thời loại bỏ nó để tập trung vào xác thực.
+    - **Hành động:** Đã sửa lỗi `ocelot.json` duplicate key và cổng HTTP/HTTPS downstream.
+    - **Hành động:** Đã thực hiện test API `POST /api/shorten` qua `ApiGateway` bằng `curl` và `Invoke-RestMethod`.
+    - **Kết quả:**
+        - Gọi API không có token: `401 Unauthorized` (Thành công).
+        - Gọi API có token và JSON body hợp lệ: `200 OK` (Thành công).
+    - **Lưu ý:** Quyết định sử dụng `Invoke-RestMethod` cho các test API dòng lệnh trong tương lai đã được thống nhất.
 
 **Tóm tắt các công việc đã hoàn thành:**
 - Khởi tạo thành công kho Git cục bộ.
@@ -84,3 +98,5 @@ Báo cáo các hành động đã thực hiện:
 - Định nghĩa xong các Data Transfer Objects (DTOs) làm cơ sở cho API Contracts.
 - Đã tạo file Swagger giả lập (`mock-swagger.json`) để gửi cho team Frontend.
 - Đã hoàn thành phát triển tính năng tạo link rút gọn (Command Side - Write) cho `ShortenerService`, bao gồm cả việc giải quyết các lỗi kết nối database và typo.
+- Đã cấu hình và test thành công xác thực JWT trên API Gateway cho route tạo link rút gọn.
+
