@@ -53,8 +53,24 @@ Báo cáo các hành động đã thực hiện:
 **10. Tạo và gửi file Swagger giả lập:**
     - **Hành động:** Đã tạo tạm thời `MockApiController.cs` trong dự án `short_url_asm` để tạo ra tài liệu Swagger.
     - **Hành động:** Đã hướng dẫn bạn chạy dự án `short_url_asm` và lấy nội dung file Swagger JSON.
-    - **Hành động:** Đã lưu nội dung Swagger JSON vào file `report/mock-swagger.json`.
+    - **Hành động:** Đã lưu nội dung Swagger JSON vào file `mock-swagger.json`.
     - **Lưu ý:** File `MockApiController.cs` được giữ lại theo yêu cầu của bạn.
+
+**11. Phát triển ShortenerService (Command Side - Write):**
+    - **Hành động:** Đã tạo project `ShortenerService` trong Visual Studio.
+    - **Hành động:** Đã cài đặt các gói NuGet cần thiết (EF Core, MediatR, Npgsql.EntityFrameworkCore.PostgreSQL, Swashbuckle.AspNetCore).
+    - **Hành động:** Đã khắc phục lỗi: thay thế `Npgsql.EntityFrameworkCore.PostgreSQL` bằng `Microsoft.EntityFrameworkCore.SqlServer` do dùng SQL Server.
+    - **Hành động:** Đã setup cấu trúc CQRS (thư mục Features/Commands, Queries).
+    - **Hành động:** Đã implement logic sinh mã rút gọn (Base62) trong `UrlShorteningService.cs`.
+    - **Hành động:** Đã định nghĩa `ShortenedUrl` Entity và `ApplicationDbContext`.
+    - **Hành động:** Đã cấu hình Connection String trong `appsettings.json` và `appsettings.Development.json` (sửa từ `localhost` thành `192.168.1.41` - IP của Arch Linux host).
+    - **Hành động:** Đã đăng ký `ApplicationDbContext`, `IUrlShorteningService`, và MediatR trong `Program.cs`.
+    - **Hành động:** Đã tạo và áp dụng Migration (`InitialCreate`, `RenameCreateAtToCreatedAt`) để đồng bộ schema database.
+    - **Hành động:** Đã tạo `CreateShortenedUrlCommand` và `CreateShortenedUrlCommandHandler`.
+    - **Hành động:** Đã tạo `CreateShortUrlRequest` DTO và `ShortenerController` với endpoint `/api/shorten`.
+    - **Hành động:** Đã khắc phục lỗi typo: `CreateShortendUrlCommand` thành `CreateShortenedUrlCommand` và `CreateAt` thành `CreatedAt`.
+    - **Hành động:** Đã khắc phục lỗi kết nối SQL Server kéo dài do hiểu nhầm môi trường Docker host (Arch Linux) và client (Windows/winboat) bằng cách sử dụng IP trực tiếp `192.168.1.41` trong Connection String.
+    - **Hành động:** Đã chạy và test thành công API `POST /api/shorten`.
 
 **Tóm tắt các công việc đã hoàn thành:**
 - Khởi tạo thành công kho Git cục bộ.
@@ -67,3 +83,4 @@ Báo cáo các hành động đã thực hiện:
 - Thiết lập thành công khung Ocelot API Gateway.
 - Định nghĩa xong các Data Transfer Objects (DTOs) làm cơ sở cho API Contracts.
 - Đã tạo file Swagger giả lập (`mock-swagger.json`) để gửi cho team Frontend.
+- Đã hoàn thành phát triển tính năng tạo link rút gọn (Command Side - Write) cho `ShortenerService`, bao gồm cả việc giải quyết các lỗi kết nối database và typo.
