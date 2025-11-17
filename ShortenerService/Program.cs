@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using ShortenerService.Data;
 using ShortenerService.Services;
+using ShortenerService.Messaging;
+using Microsoft.Extensions.Caching.StackExchangeRedis; // Add this using
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -21,6 +23,12 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Add Redis Distributed Cache
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
+    options.InstanceName = "ShortenerService_";
+});
 
 // Register UrlShorteningService
 builder.Services.AddScoped<IUrlShorteningService, UrlShorteningService>();
@@ -28,6 +36,8 @@ builder.Services.AddScoped<IUrlShorteningService, UrlShorteningService>();
 // Register MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
+// Register RabbitMQ Publisher
+builder.Services.AddSingleton<IRabbitMQPublisher, RabbitMQPublisher>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
