@@ -4,7 +4,20 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.AllowAnyOrigin()
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+                      });
+});
 
 // 1. Add Ocelot configuration
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
@@ -37,6 +50,8 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddOcelot(builder.Configuration);
 
 var app = builder.Build();
+
+app.UseCors(MyAllowSpecificOrigins);
 
 // Temporary endpoint to generate a test token
 app.MapGet("/get-token", () => {

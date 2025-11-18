@@ -33,7 +33,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 // Register UrlShorteningService
 builder.Services.AddScoped<IUrlShorteningService, UrlShorteningService>();
 
-// Register MediatR
+// Regivster MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 // Register RabbitMQ Publisher
