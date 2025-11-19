@@ -1,0 +1,34 @@
+### CHECKLIST CÔNG VIỆC CỦA LEADER (TUẦN 4)
+
+#### 1. Containerization (Đóng gói ứng dụng)
+- [x] Tạo `Dockerfile` cho `ApiGateway`.
+- [x] Tạo `Dockerfile` cho `ShortenerService`.
+- [x] Tạo `Dockerfile` cho `WebApp` (Frontend).
+
+#### 2. Cấu hình Docker Compose cho toàn bộ hệ thống
+- [x] Cập nhật `docker-compose.yml` để build và chạy 3 container ứng dụng (ApiGateway, ShortenerService, WebApp).
+- [x] Cấu hình network để các container có thể giao tiếp với nhau.
+
+#### 3. Cập nhật cấu hình cho môi trường Container
+- [x] Cập nhật `ApiGateway/ocelot.json` để `DownstreamHost` trỏ đến tên service (ví dụ: `shortenerservice`) thay vì `localhost`.
+- [x] Cập nhật các file `appsettings.json` để sử dụng tên service (ví dụ: `sqlserver`, `redis`, `rabbitmq`) cho các connection string khi chạy trong Docker.
+
+#### 4. Thiết lập CI/CD (GitHub Actions)
+- [ ] Tạo thư mục `.github/workflows`.
+- [ ] Tạo file YAML cho pipeline "Shortener Service + Gateway".
+  - [ ] Step: Checkout code.
+  - [ ] Step: Build .NET projects.
+  - [ ] Step: Build Docker images.
+  - [ ] Step: Push images to Docker Hub (cần cấu hình secrets).
+  - [ ] Step: Trigger deploy to Render (cần cấu hình deploy hook).
+- [ ] (Optional) Hướng dẫn Tuấn tạo pipeline cho `WebApp`.
+
+#### 5. Triển khai lên Cloud (Render)
+- [ ] Tạo dịch vụ PostgreSQL trên Render.
+- [ ] Tạo dịch vụ Redis trên Render.
+- [ ] Tạo dịch vụ RabbitMQ (ví dụ: trên CloudAMQP).
+- [ ] Cấu hình secrets trên GitHub (Connection strings, Docker Hub credentials, Render Deploy Hook).
+
+#### 6. Tích hợp và Quản lý
+- [ ] Review và merge code từ các thành viên khác khi họ hoàn thành.
+- [ ] Hỗ trợ team khắc phục các sự cố tích hợp.
