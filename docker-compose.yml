@@ -1,5 +1,9 @@
 version: '3.8'
 
+networks:
+  shortener_network:
+    driver: bridge
+
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2019-latest
@@ -11,6 +15,8 @@ services:
       - "1433:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
+    networks:
+      - shortener_network
 
   redis:
     image: redis:alpine
@@ -19,6 +25,8 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - shortener_network
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -28,6 +36,54 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - shortener_network
+
+  api-gateway:
+    build:
+      context: ./ApiGateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "5086:80"
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+    networks:
+      - shortener_network
+    depends_on:
+      - shortenerservice
+
+  shortenerservice:
+    build:
+      context: ./ShortenerService
+      dockerfile: Dockerfile
+    container_name: shortenerservice
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings:DefaultConnection=Server=sqlserver,1433;Database=ShortUrlDB;User Id=sa;Password=yourStrong(!)Password;TrustServerCertificate=True
+      - ConnectionStrings:RedisConnection=redis:6379
+      - ConnectionStrings:RabbitMQConnection=amqp://guest:guest@rabbitmq:5672/
+      - JwtSettings:Secret=THIS_IS_A_VERY_LONG_AND_STRONG_SECRET_KEY_FOR_JWT_AUTHENTICATION_AND_MUST_BE_KEPT_CONFIDENTIAL
+      - JwtSettings:Issuer=ShortenerApp
+      - JwtSettings:Audience=ShortenerApp.Client
+    networks:
+      - shortener_network
+    depends_on:
+      - sqlserver
+      - redis
+      - rabbitmq
+
+  webapp:
+    build:
+      context: ./vue-project
+      dockerfile: Dockerfile
+    container_name: webapp
+    ports:
+      - "8080:80"
+    networks:
+      - shortener_network
+    depends_on:
+      - api-gateway
 
 volumes:
   sqlserver_data:
