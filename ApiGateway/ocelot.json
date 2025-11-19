@@ -22,11 +22,7 @@
           "Host": "localhost",
           "Port": 5126
         }
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
+      ]
     },
     {
       "UpstreamPathTemplate": "/api/urls/{everything}",
