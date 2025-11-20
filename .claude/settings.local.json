@@ -16,7 +16,9 @@
       "Bash(git remote add:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(.gitignore)"
+      "Bash(.gitignore)",
+      "Bash(git push:*)",
+      "Bash(dotnet tool install:*)"
     ],
     "deny": [],
     "ask": []
