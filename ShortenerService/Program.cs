@@ -21,7 +21,7 @@ builder.Services.AddCors(options =>
 
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add Redis Distributed Cache
 builder.Services.AddStackExchangeRedisCache(options =>
@@ -46,11 +46,11 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Auto-migrate database on startup
+// Auto-create database on startup
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    db.Database.EnsureCreated();
 }
 
 // Configure the HTTP request pipeline.
