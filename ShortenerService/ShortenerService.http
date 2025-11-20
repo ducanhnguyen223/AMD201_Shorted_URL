@@ -1,0 +1,6 @@
+@ShortenerService_HostAddress = http://localhost:5126
+
+GET {{ShortenerService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
