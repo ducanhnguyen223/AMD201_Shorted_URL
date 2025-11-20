@@ -1,0 +1,121 @@
+services:
+  # Infrastructure Services
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sqlserver
+    environment:
+      SA_PASSWORD: "yourStrong(!)Password"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - shortener-network
+    healthcheck:
+      test: ["CMD-SHELL", "sleep 30"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - shortener-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - shortener-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # Application Services
+  shortener-service:
+    build:
+      context: ./ShortenerService
+      dockerfile: Dockerfile
+    container_name: shortener-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=ShortUrlDB;User Id=sa;Password=yourStrong(!)Password;TrustServerCertificate=True
+      - ConnectionStrings__RedisConnection=redis:6379
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "5126:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      sqlserver:
+        condition: service_started
+    networks:
+      - shortener-network
+    restart: on-failure
+
+  api-gateway:
+    build:
+      context: ./ApiGateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - JwtSettings__Secret=THIS_IS_A_VERY_LONG_AND_STRONG_SECRET_KEY_FOR_JWT_AUTHENTICATION_AND_MUST_BE_KEPT_CONFIDENTIAL
+      - JwtSettings__Issuer=ShortenerApp
+      - JwtSettings__Audience=ShortenerApp.Client
+    ports:
+      - "5000:8080"
+    depends_on:
+      - shortener-service
+    networks:
+      - shortener-network
+    restart: on-failure
+
+  frontend:
+    build:
+      context: ./vue-project
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - shortener-network
+    restart: on-failure
+
+networks:
+  shortener-network:
+    driver: bridge
+
+volumes:
+  sqlserver_data:
+  redis_data:
+  rabbitmq_data:

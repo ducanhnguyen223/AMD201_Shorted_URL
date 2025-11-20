@@ -1,0 +1,9 @@
+CHECKLIST CÔNG VIỆC CỦA LEADER (TUẦN 1)
+
+- [x] **Repo Setup:** Khởi tạo Git, chia nhánh `main`, `develop`.
+- [x] **Infrastructure:** Viết `docker-compose.yml` chạy SQL, Redis, RabbitMQ.
+- [x] **Gateway:** Code xong khung Ocelot Gateway.
+- [x] **API Contracts (Quan trọng nhất):**
+    - [x] Quy định Input/Output cho API Login/Register (Giao cho Đ.A).
+    - [x] Quy định Input/Output cho API CRUD Link (Giao cho Tiến).
+    - [x] Gửi file Swagger giả lập cho Tuấn.

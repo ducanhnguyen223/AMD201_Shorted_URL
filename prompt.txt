@@ -1,0 +1,6 @@
+chào bạn, tôi cần bạn giúp một việc. Đầu tiên hãy vào folder Merterial để đọc yêu cầu bài tập và plan, trong đó có cả các file ảnh và sơ đồ.
+trong file plan3.pdf thì tôi chính là leader của nhiệm vụ lần này. Tôi đã làm tới tuần 3, và đang bắt đầu sang tuần 4. Bạn trong vai là trợ lí. người hướng dẫn tôi hoàn thành bài asignment này,
+
+
+tình hình trang web hiện tại: trước đó tôi có thể đã cấu hình sai Jwt hay gì đó mà bắt người dùng phải đăng nhập để rút gọn link, nếu được bạn có thể xem qua code 1 lượt và sửa các cấu hình jwt, nhiệm vụ tuần 4 là đóng gói ứng dụng và đưa lên các cloud,
+tôi muốn trang web rút gọn của tôi không cần đăng nhập mà vẫn rút gọn được. Tôi có use-case trong Folder Merterial hết rồi.
