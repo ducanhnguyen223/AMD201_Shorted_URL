@@ -46,11 +46,11 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Auto-create database on startup
+// Auto-migrate database on startup
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.EnsureCreated();
+    db.Database.Migrate();
 }
 
 // Configure the HTTP request pipeline.
