@@ -7,7 +7,7 @@
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
-          "Host": "user-service-production.up.railway.app",
+          "Host": "user-service-production-f7b6.up.railway.app",
           "Port": 443
         }
       ]
