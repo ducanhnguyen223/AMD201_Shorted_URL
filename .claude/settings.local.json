@@ -26,7 +26,11 @@
       "Bash(dotnet add:*)",
       "Bash(if exist \"Controllers\\WeatherForecastController.cs\" del \"Controllers\\WeatherForecastController.cs\")",
       "Bash(if exist \"WeatherForecast.cs\" del \"WeatherForecast.cs\")",
-      "Bash(docker logs:*)"
+      "Bash(docker logs:*)",
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(dotnet run:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkB0ZXN0LmNvbSIsImVtYWlsIjoiYWRtaW5AdGVzdC5jb20iLCJqdGkiOiJlZmViMTMzNS0xN2M4LTQ0NmMtOTUyMS0zYTQ4YWViYjVmMzUiLCJ1c2VySWQiOiIzIiwiZnVsbE5hbWUiOiJBZG1pbiBVc2VyIiwicm9sZSI6IlVzZXIiLCJleHAiOjE3NjM4MTA2MjEsImlzcyI6IlNob3J0ZW5lckFwcCIsImF1ZCI6IlNob3J0ZW5lckFwcC5DbGllbnQifQ.ocLXVD86FmJmTYXiDaFBgGabITMPPU4OnjwkyNARC4w\")",
+      "Bash(ADMIN_TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkB0ZXN0LmNvbSIsImVtYWlsIjoiYWRtaW5AdGVzdC5jb20iLCJqdGkiOiI2NjljODkzNC0wZjBiLTQ0M2MtODU3Ny1iMWRmZmIyMmI1NWEiLCJ1c2VySWQiOiIzIiwiZnVsbE5hbWUiOiJBZG1pbiBVc2VyIiwicm9sZSI6IkFkbWluIiwiZXhwIjoxNzYzODEwNzQ5LCJpc3MiOiJTaG9ydGVuZXJBcHAiLCJhdWQiOiJTaG9ydGVuZXJBcHAuQ2xpZW50In0.9OLBHWBU8_z2rRQSdAYeNNfVcSEwlObZvBKkVhg1LzY\")"
     ],
     "deny": [],
     "ask": []

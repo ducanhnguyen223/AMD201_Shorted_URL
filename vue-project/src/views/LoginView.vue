@@ -44,8 +44,8 @@ async function handleLogin() {
     localStorage.setItem('userEmail', data.email);
     localStorage.setItem('userFullName', data.fullName);
 
-    // Redirect to home
-    router.push('/');
+    // Redirect to dashboard
+    router.push('/dashboard');
   } catch (error) {
     errorMessage.value = error.message;
   } finally {
