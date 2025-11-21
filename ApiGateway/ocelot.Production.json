@@ -19,8 +19,8 @@
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
-          "Host": "shortener-service.railway.internal",
-          "Port": 8080
+          "Host": "shortenner-service-production.up.railway.app",
+          "Port": 443
         }
       ]
     },
@@ -31,8 +31,8 @@
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
-          "Host": "shortener-service.railway.internal",
-          "Port": 8080
+          "Host": "shortenner-service-production.up.railway.app",
+          "Port": 443
         }
       ]
     },
@@ -43,13 +43,13 @@
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
-          "Host": "shortener-service.railway.internal",
-          "Port": 8080
+          "Host": "shortenner-service-production.up.railway.app",
+          "Port": 443
         }
       ]
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "https://api-gateway-production.up.railway.app"
+    "BaseUrl": "https://api-gateway-production-e75a.up.railway.app"
   }
 }
