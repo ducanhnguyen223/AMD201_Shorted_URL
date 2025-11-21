@@ -18,7 +18,9 @@
       "Bash(git commit:*)",
       "Bash(.gitignore)",
       "Bash(git push:*)",
-      "Bash(dotnet tool install:*)"
+      "Bash(dotnet tool install:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []
