@@ -1,9 +1,9 @@
 {
   "Routes": [
     {
-      "UpstreamPathTemplate": "/api/users/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
-      "DownstreamPathTemplate": "/api/users/{everything}",
+      "UpstreamPathTemplate": "/api/auth/{everything}",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/auth/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {

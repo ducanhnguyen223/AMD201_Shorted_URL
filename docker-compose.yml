@@ -54,6 +54,26 @@ services:
       retries: 5
 
   # Application Services
+  user-service:
+    build:
+      context: ./UserService
+      dockerfile: Dockerfile
+    container_name: user-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=UserDB;Username=postgres;Password=postgres
+      - JwtSettings__Secret=THIS_IS_A_VERY_LONG_AND_STRONG_SECRET_KEY_FOR_JWT_AUTHENTICATION_AND_MUST_BE_KEPT_CONFIDENTIAL
+      - JwtSettings__Issuer=ShortenerApp
+      - JwtSettings__Audience=ShortenerApp.Client
+    ports:
+      - "5001:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - shortener-network
+    restart: on-failure
+
   shortener-service:
     build:
       context: ./ShortenerService
@@ -94,6 +114,7 @@ services:
       - "5000:8080"
     depends_on:
       - shortener-service
+      - user-service
     networks:
       - shortener-network
     restart: on-failure
