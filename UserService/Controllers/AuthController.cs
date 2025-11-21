@@ -1,6 +1,7 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using UserService.DTOs;
-using UserService.Services;
+using UserService.Features.Commands;
 
 namespace UserService.Controllers
 {
@@ -8,37 +9,52 @@ namespace UserService.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthService _authService;
+        private readonly IMediator _mediator;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IMediator mediator)
         {
-            _authService = authService;
+            _mediator = mediator;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            var result = await _authService.Register(request);
-
-            if (result == null)
+            try
             {
-                return BadRequest(new { message = "User already exists" });
-            }
+                var command = new RegisterCommand
+                {
+                    Email = request.Email,
+                    Password = request.Password,
+                    FullName = request.FullName
+                };
 
-            return Ok(result);
+                var result = await _mediator.Send(command);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var result = await _authService.Login(request);
-
-            if (result == null)
+            try
             {
-                return Unauthorized(new { message = "Invalid email or password" });
-            }
+                var command = new LoginCommand
+                {
+                    Email = request.Email,
+                    Password = request.Password
+                };
 
-            return Ok(result);
+                var result = await _mediator.Send(command);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
         }
     }
 }
