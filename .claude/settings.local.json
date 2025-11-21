@@ -25,7 +25,8 @@
       "Bash(dotnet add package:*)",
       "Bash(dotnet add:*)",
       "Bash(if exist \"Controllers\\WeatherForecastController.cs\" del \"Controllers\\WeatherForecastController.cs\")",
-      "Bash(if exist \"WeatherForecast.cs\" del \"WeatherForecast.cs\")"
+      "Bash(if exist \"WeatherForecast.cs\" del \"WeatherForecast.cs\")",
+      "Bash(docker logs:*)"
     ],
     "deny": [],
     "ask": []
