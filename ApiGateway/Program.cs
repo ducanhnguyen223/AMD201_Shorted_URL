@@ -20,9 +20,11 @@ builder.Services.AddCors(options =>
 });
 
 // 1. Add Ocelot configuration
-var ocelotConfigFile = builder.Environment.EnvironmentName == "Development" && Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true"
-    ? "ocelot.Docker.json"
-    : "ocelot.json";
+var ocelotConfigFile = builder.Environment.EnvironmentName == "Production"
+    ? "ocelot.Production.json"
+    : (builder.Environment.EnvironmentName == "Development" && Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true"
+        ? "ocelot.Docker.json"
+        : "ocelot.json");
 
 builder.Configuration.AddJsonFile(ocelotConfigFile, optional: false, reloadOnChange: true);
 
