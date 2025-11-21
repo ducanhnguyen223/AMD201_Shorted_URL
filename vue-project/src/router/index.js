@@ -18,8 +18,31 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: () => import('../views/RegisterView.vue')
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: () => import('../views/UserDashboardView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('../views/AdminDashboardView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
     }
   ]
 })
+
+// Navigation guard to check authentication
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('authToken');
+
+  if (to.meta.requiresAuth && !token) {
+    next('/login');
+  } else {
+    next();
+  }
+});
 
 export default router

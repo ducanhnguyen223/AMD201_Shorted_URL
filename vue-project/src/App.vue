@@ -1,5 +1,17 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
+import { ref, onMounted } from 'vue'
+
+const isLoggedIn = ref(false)
+
+onMounted(() => {
+  checkAuth()
+  window.addEventListener('storage', checkAuth)
+})
+
+function checkAuth() {
+  isLoggedIn.value = !!localStorage.getItem('authToken')
+}
 </script>
 
 <template>
@@ -7,13 +19,14 @@ import { RouterLink, RouterView } from 'vue-router'
     <div class="wrapper">
       <nav>
         <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/login">Login</RouterLink>
-        <RouterLink to="/register">Register</RouterLink>
+        <RouterLink v-if="isLoggedIn" to="/dashboard">Dashboard</RouterLink>
+        <RouterLink v-if="!isLoggedIn" to="/login">Login</RouterLink>
+        <RouterLink v-if="!isLoggedIn" to="/register">Register</RouterLink>
       </nav>
     </div>
   </header>
 
   <main>
-    <RouterView />
+    <RouterView @vnode-mounted="checkAuth" />
   </main>
 </template>

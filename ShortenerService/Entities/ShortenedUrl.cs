@@ -13,5 +13,7 @@ namespace ShortenerService.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? ExpiresAt { get; set; }
         public int AccessCount { get; set; } = 0;
+        public int? UserId { get; set; } // Link to UserService (optional for anonymous links)
+        public string? CustomAlias { get; set; } // Custom alias for registered users
     }
 }

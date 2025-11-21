@@ -2,12 +2,84 @@
   "Routes": [
     {
       "UpstreamPathTemplate": "/api/auth/{everything}",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": [ "POST", "GET" ],
       "DownstreamPathTemplate": "/api/auth/{everything}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
           "Host": "user-service-production-f7b6.up.railway.app",
+          "Port": 443
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/users/{everything}",
+      "UpstreamHttpMethod": [ "GET", "DELETE" ],
+      "DownstreamPathTemplate": "/api/admin/users/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "user-service-production-f7b6.up.railway.app",
+          "Port": 443
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/users",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/admin/users",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "user-service-production-f7b6.up.railway.app",
+          "Port": 443
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/stats",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/admin/stats",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "shortenner-service-production.up.railway.app",
+          "Port": 443
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/urls",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/admin/urls",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "shortenner-service-production.up.railway.app",
+          "Port": 443
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/urls/{everything}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "DownstreamPathTemplate": "/api/admin/urls/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "shortenner-service-production.up.railway.app",
+          "Port": 443
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/rabbitmq/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/admin/rabbitmq/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "shortenner-service-production.up.railway.app",
           "Port": 443
         }
       ]
@@ -28,6 +100,18 @@
       "UpstreamPathTemplate": "/api/urls/{everything}",
       "UpstreamHttpMethod": [ "GET", "PUT", "DELETE" ],
       "DownstreamPathTemplate": "/api/urls/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "shortenner-service-production.up.railway.app",
+          "Port": 443
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/urls",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/urls",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
