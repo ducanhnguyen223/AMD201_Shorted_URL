@@ -9,7 +9,9 @@ const linkHistory = ref([]);
 const isDarkMode = ref(false);
 const showQRCode = ref(false);
 
-const gatewayBaseUrl = 'http://localhost:5000';
+const gatewayBaseUrl = import.meta.env.PROD
+  ? 'https://api-gateway-production-e75a.up.railway.app'
+  : 'http://localhost:5000';
 
 // Particle effect cho background
 const particles = ref([]);
