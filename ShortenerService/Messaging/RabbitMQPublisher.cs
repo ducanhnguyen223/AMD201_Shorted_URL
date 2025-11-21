@@ -22,13 +22,15 @@ namespace ShortenerService.Messaging
             var rabbitMQPort = int.Parse(configuration["RabbitMQ:Port"] ?? "5672");
             var rabbitMQUser = configuration["RabbitMQ:UserName"] ?? "guest";
             var rabbitMQPass = configuration["RabbitMQ:Password"] ?? "guest";
+            var rabbitMQVHost = configuration["RabbitMQ:VirtualHost"] ?? "/";
 
             var factory = new ConnectionFactory()
             {
                 HostName = rabbitMQHost,
                 Port = rabbitMQPort,
                 UserName = rabbitMQUser,
-                Password = rabbitMQPass
+                Password = rabbitMQPass,
+                VirtualHost = rabbitMQVHost
             };
 
             _connection = factory.CreateConnection();
