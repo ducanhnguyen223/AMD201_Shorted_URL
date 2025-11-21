@@ -7,5 +7,7 @@ namespace ShortenerService.DTOs
         [Required]
         [Url]
         public string OriginalUrl { get; set; }
+
+        public string? CustomAlias { get; set; } // Optional custom alias for registered users
     }
 }

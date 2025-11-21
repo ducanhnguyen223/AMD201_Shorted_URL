@@ -36,7 +36,8 @@ namespace UserService.Services
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim("userId", user.Id.ToString()),
-                new Claim("fullName", user.FullName)
+                new Claim("fullName", user.FullName),
+                new Claim("role", user.Role)
             };
 
             var token = new JwtSecurityToken(
