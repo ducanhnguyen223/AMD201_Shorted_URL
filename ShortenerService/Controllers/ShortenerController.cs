@@ -67,22 +67,6 @@ namespace ShortenerService.Controllers
             }
         }
 
-        [HttpGet("/{shortCode}")]
-        public async Task<IActionResult> RedirectToOriginalUrl(string shortCode)
-        {
-            var query = new Features.Queries.GetShortenedUrlByCodeQuery { ShortCode = shortCode };
-            var result = await _mediator.Send(query);
-
-            if (result == null || string.IsNullOrEmpty(result.OriginalUrl))
-            {
-                return NotFound();
-            }
-
-            // In a real application, you might want to increment AccessCount here and save to DB.
-            // For now, just redirect.
-            return Redirect(result.OriginalUrl);
-        }
-
         // User Dashboard endpoints
         [HttpGet("urls")]
         [Authorize]
