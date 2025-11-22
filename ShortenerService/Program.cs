@@ -30,9 +30,29 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 var redisConnection = builder.Configuration.GetConnectionString("RedisConnection");
 if (!string.IsNullOrEmpty(redisConnection))
 {
+    // Parse Redis URL if in redis:// format
+    string parsedConnectionString = redisConnection;
+    if (redisConnection.StartsWith("redis://"))
+    {
+        try
+        {
+            var uri = new Uri(redisConnection);
+            var password = !string.IsNullOrEmpty(uri.UserInfo) && uri.UserInfo.Contains(":")
+                ? uri.UserInfo.Split(':')[1]
+                : "";
+
+            parsedConnectionString = $"{uri.Host}:{uri.Port},password={password},ssl=false,abortConnect=false";
+        }
+        catch
+        {
+            // If parsing fails, use original connection string
+            parsedConnectionString = redisConnection;
+        }
+    }
+
     builder.Services.AddStackExchangeRedisCache(options =>
     {
-        options.Configuration = redisConnection;
+        options.Configuration = parsedConnectionString;
         options.InstanceName = "ShortenerService_";
     });
 }
@@ -133,7 +153,6 @@ app.MapGet("/api/health", async (ApplicationDbContext dbContext, IConfiguration 
     }
 
     // Check Redis
-    string redisError = "";
     try
     {
         var redisConnectionString = configuration.GetConnectionString("RedisConnection");
@@ -144,7 +163,30 @@ app.MapGet("/api/health", async (ApplicationDbContext dbContext, IConfiguration 
         }
         else
         {
-            var redis = StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString + ",abortConnect=false,connectTimeout=10000,connectRetry=3");
+            // Parse Redis URL if in redis:// format
+            string parsedConnectionString = redisConnectionString;
+            if (redisConnectionString.StartsWith("redis://"))
+            {
+                try
+                {
+                    var uri = new Uri(redisConnectionString);
+                    var password = !string.IsNullOrEmpty(uri.UserInfo) && uri.UserInfo.Contains(":")
+                        ? uri.UserInfo.Split(':')[1]
+                        : "";
+
+                    parsedConnectionString = $"{uri.Host}:{uri.Port},password={password},ssl=false,abortConnect=false,connectTimeout=10000,connectRetry=3";
+                }
+                catch
+                {
+                    parsedConnectionString = redisConnectionString + ",abortConnect=false,connectTimeout=10000,connectRetry=3";
+                }
+            }
+            else
+            {
+                parsedConnectionString = redisConnectionString + ",abortConnect=false,connectTimeout=10000,connectRetry=3";
+            }
+
+            var redis = StackExchange.Redis.ConnectionMultiplexer.Connect(parsedConnectionString);
             if (redis.IsConnected)
             {
                 result = result with { redis = "connected" };
@@ -158,7 +200,6 @@ app.MapGet("/api/health", async (ApplicationDbContext dbContext, IConfiguration 
     }
     catch (Exception ex)
     {
-        redisError = ex.Message;
         result = result with { redis = $"error: {ex.Message}" };
     }
 
