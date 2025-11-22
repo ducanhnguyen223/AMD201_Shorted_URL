@@ -26,12 +26,21 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add Redis Distributed Cache
-builder.Services.AddStackExchangeRedisCache(options =>
+// Add Redis Distributed Cache - Optional
+var redisConnection = builder.Configuration.GetConnectionString("RedisConnection");
+if (!string.IsNullOrEmpty(redisConnection))
 {
-    options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
-    options.InstanceName = "ShortenerService_";
-});
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnection;
+        options.InstanceName = "ShortenerService_";
+    });
+}
+else
+{
+    // Use in-memory cache if Redis not configured
+    builder.Services.AddDistributedMemoryCache();
+}
 
 // Add JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
