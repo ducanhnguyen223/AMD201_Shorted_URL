@@ -32,7 +32,7 @@ async function shortenUrl() {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.title || 'Có lỗi xảy ra khi rút gọn URL');
+      throw new Error(data.title || 'Có lỗi xảy ra');
     }
 
     shortenedUrl.value = data.shortUrl;
@@ -46,191 +46,195 @@ async function shortenUrl() {
 async function copyToClipboard() {
   try {
     await navigator.clipboard.writeText(shortenedUrl.value);
-    alert('Đã sao chép link!');
+    alert('Đã sao chép!');
   } catch (err) {
-    errorMessage.value = 'Không thể sao chép link';
+    errorMessage.value = 'Không thể sao chép';
   }
 }
 </script>
 
 <template>
-  <div class="home-container">
-    <div class="home-content">
-      <!-- Hero Section -->
-      <div class="hero">
-        <h1 class="title">Rút Gọn URL Của Bạn</h1>
-        <p class="subtitle">Chuyển đổi link dài thành link ngắn gọn, dễ chia sẻ</p>
+  <div class="home-page">
+    <div class="container">
+      <!-- Simple Navigation -->
+      <div class="top-nav">
+        <router-link to="/login" class="nav-btn">Đăng nhập</router-link>
+        <router-link to="/register" class="nav-btn">Đăng ký</router-link>
       </div>
 
-      <!-- Shortener Form -->
-      <div class="shortener-card">
-        <form @submit.prevent="shortenUrl" class="shortener-form">
+      <!-- Hero -->
+      <div class="hero">
+        <h1>🔗 Rút Gọn URL</h1>
+        <p>Chuyển link dài thành link ngắn gọn, dễ chia sẻ</p>
+      </div>
+
+      <!-- Main Form -->
+      <div class="main-card">
+        <form @submit.prevent="shortenUrl">
           <div class="input-group">
             <input
               type="url"
               v-model="originalUrl"
-              placeholder="Nhập URL dài của bạn... (vd: https://example.com)"
-              class="url-input"
+              placeholder="Nhập URL của bạn (vd: https://example.com)"
               required
             />
-            <button
-              type="submit"
-              :disabled="isLoading"
-              class="shorten-btn"
-            >
-              {{ isLoading ? 'Đang xử lý...' : 'Rút gọn' }}
+            <button type="submit" :disabled="isLoading">
+              {{ isLoading ? '⏳ Đang xử lý...' : 'Rút gọn' }}
             </button>
           </div>
         </form>
 
-        <!-- Error Message -->
-        <div v-if="errorMessage" class="message error">
-          ❌ {{ errorMessage }}
+        <!-- Error -->
+        <div v-if="errorMessage" class="alert error">
+          {{ errorMessage }}
         </div>
 
         <!-- Result -->
         <div v-if="shortenedUrl" class="result">
-          <div class="result-header">
-            <span class="success-icon">✅</span>
-            <span>Link đã được rút gọn!</span>
-          </div>
-          <div class="result-url">
-            <a :href="shortenedUrl" target="_blank" class="short-url">
-              {{ shortenedUrl }}
-            </a>
-            <button @click="copyToClipboard" class="copy-btn">
-              📋 Sao chép
-            </button>
+          <p class="result-label">✅ Link rút gọn:</p>
+          <div class="result-box">
+            <a :href="shortenedUrl" target="_blank">{{ shortenedUrl }}</a>
+            <button @click="copyToClipboard" class="copy-btn">📋</button>
           </div>
         </div>
       </div>
 
       <!-- Features -->
       <div class="features">
-        <div class="feature-card">
-          <div class="feature-icon">🚀</div>
-          <h3>Nhanh Chóng</h3>
-          <p>Rút gọn URL chỉ trong vài giây</p>
+        <div class="feature">
+          <span class="icon">🚀</span>
+          <p>Nhanh chóng</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">🔒</div>
-          <h3>An Toàn</h3>
-          <p>Bảo mật và đáng tin cậy</p>
+        <div class="feature">
+          <span class="icon">🔒</span>
+          <p>An toàn</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">📊</div>
-          <h3>Dashboard</h3>
-          <p>Quản lý links của bạn</p>
+        <div class="feature">
+          <span class="icon">📊</span>
+          <p>Quản lý link</p>
         </div>
       </div>
 
       <!-- CTA -->
       <div class="cta">
-        <p>Muốn quản lý và theo dõi links của bạn?</p>
-        <router-link to="/register" class="cta-btn">
-          Đăng ký miễn phí →
-        </router-link>
+        <p>Muốn quản lý và theo dõi links?</p>
+        <router-link to="/register" class="btn-primary">Đăng ký miễn phí →</router-link>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.home-container {
-  width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+.home-page {
+  min-height: 100vh;
+  padding: 1rem;
 }
 
-.home-content {
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Top Navigation */
+.top-nav {
   display: flex;
-  flex-direction: column;
-  gap: 3rem;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.nav-btn {
+  padding: 0.5rem 1.25rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Hero */
 .hero {
   text-align: center;
   color: white;
+  margin-bottom: 2.5rem;
 }
 
-.title {
-  font-size: 3rem;
+.hero h1 {
+  font-size: 2.5rem;
   font-weight: 800;
-  margin-bottom: 1rem;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+  margin-bottom: 0.75rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
-.subtitle {
-  font-size: 1.25rem;
+.hero p {
+  font-size: 1.1rem;
   opacity: 0.95;
 }
 
-/* Shortener Card */
-.shortener-card {
+/* Main Card */
+.main-card {
   background: white;
-  border-radius: 20px;
-  padding: 2.5rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-}
-
-.shortener-form {
-  margin-bottom: 1.5rem;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
 }
 
 .input-group {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-.url-input {
+.input-group input {
   flex: 1;
-  padding: 1rem 1.5rem;
+  padding: 0.875rem 1rem;
   border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
 }
 
-.url-input:focus {
+.input-group input:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.shorten-btn {
-  padding: 1rem 2.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.input-group button {
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 1rem;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.2s;
   white-space: nowrap;
 }
 
-.shorten-btn:hover:not(:disabled) {
+.input-group button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
 }
 
-.shorten-btn:disabled {
+.input-group button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Messages */
-.message {
-  padding: 1rem;
-  border-radius: 12px;
+/* Alert */
+.alert {
+  padding: 0.875rem;
+  border-radius: 8px;
   margin-bottom: 1rem;
-  font-weight: 500;
 }
 
-.error {
+.alert.error {
   background: #fee;
   color: #c00;
   border: 1px solid #fcc;
@@ -238,144 +242,121 @@ async function copyToClipboard() {
 
 /* Result */
 .result {
-  background: #f0fdf4;
-  border: 2px solid #86efac;
-  border-radius: 12px;
-  padding: 1.5rem;
+  margin-top: 1.5rem;
 }
 
-.result-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+.result-label {
   font-weight: 600;
   color: #16a34a;
+  margin-bottom: 0.5rem;
 }
 
-.success-icon {
-  font-size: 1.5rem;
-}
-
-.result-url {
+.result-box {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: center;
+  padding: 0.875rem;
+  background: #f0fdf4;
+  border: 2px solid #86efac;
+  border-radius: 8px;
 }
 
-.short-url {
+.result-box a {
   flex: 1;
-  padding: 0.75rem 1rem;
-  background: white;
-  border: 1px solid #86efac;
-  border-radius: 8px;
   color: #667eea;
   text-decoration: none;
   font-weight: 600;
   word-break: break-all;
 }
 
-.short-url:hover {
-  background: #fafafa;
+.result-box a:hover {
+  text-decoration: underline;
 }
 
 .copy-btn {
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 0.75rem;
   background: #16a34a;
   color: white;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
+  border-radius: 6px;
   cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.3s ease;
+  font-size: 1.125rem;
+  transition: background 0.2s;
 }
 
 .copy-btn:hover {
   background: #15803d;
-  transform: translateY(-2px);
 }
 
 /* Features */
 .features {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
 
-.feature-card {
+.feature {
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  padding: 2rem;
+  padding: 1.5rem;
+  border-radius: 12px;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  transition: transform 0.2s;
 }
 
-.feature-card:hover {
-  transform: translateY(-5px);
+.feature:hover {
+  transform: translateY(-4px);
 }
 
-.feature-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-.feature-card h3 {
-  font-size: 1.25rem;
-  font-weight: 700;
+.feature .icon {
+  font-size: 2.5rem;
+  display: block;
   margin-bottom: 0.5rem;
-  color: #333;
 }
 
-.feature-card p {
-  color: #666;
-  font-size: 0.95rem;
+.feature p {
+  color: #333;
+  font-weight: 600;
+  margin: 0;
 }
 
 /* CTA */
 .cta {
   text-align: center;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  color: white;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
 }
 
 .cta p {
-  font-size: 1.125rem;
-  color: #333;
   margin-bottom: 1rem;
+  font-size: 1.05rem;
 }
 
-.cta-btn {
+.btn-primary {
   display: inline-block;
-  padding: 1rem 2.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  padding: 0.875rem 2rem;
+  background: white;
+  color: #667eea;
   text-decoration: none;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 1.125rem;
-  transition: all 0.3s ease;
+  border-radius: 10px;
+  font-weight: 700;
+  transition: transform 0.2s;
 }
 
-.cta-btn:hover {
+.btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .title {
+  .hero h1 {
     font-size: 2rem;
   }
 
-  .subtitle {
-    font-size: 1rem;
-  }
-
-  .shortener-card {
+  .main-card {
     padding: 1.5rem;
   }
 
@@ -383,12 +364,13 @@ async function copyToClipboard() {
     flex-direction: column;
   }
 
-  .result-url {
-    flex-direction: column;
-  }
-
   .features {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .feature {
+    padding: 1rem;
   }
 }
 </style>

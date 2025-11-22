@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using ShortenerService.Data;
 using RabbitMQ.Client;
+using StackExchange.Redis;
 using System.Text.Json;
 
 namespace ShortenerService.Controllers
@@ -67,20 +69,29 @@ namespace ShortenerService.Controllers
 
             var urls = await _context.ShortenedUrls
                 .OrderByDescending(u => u.CreatedAt)
-                .Select(u => new
-                {
-                    u.Id,
-                    u.OriginalUrl,
-                    u.ShortCode,
-                    u.CustomAlias,
-                    u.CreatedAt,
-                    u.AccessCount,
-                    u.UserId,
-                    ShortUrl = $"{Request.Scheme}://{Request.Host}/{u.ShortCode}"
-                })
                 .ToListAsync();
 
-            return Ok(urls);
+            // Use gateway URL from configuration or request headers
+            var gatewayUrl = Request.Headers["X-Forwarded-Host"].FirstOrDefault()
+                ?? Request.Headers["X-Original-Host"].FirstOrDefault()
+                ?? Request.Host.Value;
+
+            var scheme = Request.Headers["X-Forwarded-Proto"].FirstOrDefault()
+                ?? Request.Scheme;
+
+            var result = urls.Select(u => new
+            {
+                u.Id,
+                u.OriginalUrl,
+                u.ShortCode,
+                u.CustomAlias,
+                u.CreatedAt,
+                u.AccessCount,
+                u.UserId,
+                ShortUrl = $"{scheme}://{gatewayUrl}/{u.ShortCode}"
+            });
+
+            return Ok(result);
         }
 
         // DELETE /api/admin/urls/{id} - Xóa URL bất kỳ
@@ -178,6 +189,99 @@ namespace ShortenerService.Controllers
                     channels = 0,
                     messages = 0,
                     isConnected = false,
+                    error = ex.Message
+                });
+            }
+        }
+
+        // GET /api/admin/redis/stats - Thống kê Redis
+        [HttpGet("redis/stats")]
+        public IActionResult GetRedisStats()
+        {
+            // Check if user is admin
+            var roleClaim = User.FindFirst("role");
+            if (roleClaim == null || roleClaim.Value != "Admin")
+            {
+                return Forbid();
+            }
+
+            try
+            {
+                var redisConnectionString = _configuration.GetConnectionString("Redis") ?? "localhost:6379";
+                var connection = ConnectionMultiplexer.Connect(redisConnectionString);
+                var server = connection.GetServer(connection.GetEndPoints()[0]);
+                var db = connection.GetDatabase();
+
+                var info = server.Info();
+                var serverInfo = info.FirstOrDefault(g => g.Key == "Server");
+                var clientsInfo = info.FirstOrDefault(g => g.Key == "Clients");
+                var memoryInfo = info.FirstOrDefault(g => g.Key == "Memory");
+                var statsInfo = info.FirstOrDefault(g => g.Key == "Stats");
+                var keyspaceInfo = info.FirstOrDefault(g => g.Key == "Keyspace");
+
+                // Parse uptime
+                var uptimeSeconds = serverInfo?.FirstOrDefault(x => x.Key == "uptime_in_seconds").Value ?? "0";
+                var uptimeDays = int.Parse(uptimeSeconds) / 86400;
+                var uptimeHours = (int.Parse(uptimeSeconds) % 86400) / 3600;
+                var uptimeString = uptimeDays > 0 ? $"{uptimeDays} days" : $"{uptimeHours} hours";
+
+                // Parse memory
+                var usedMemoryBytes = long.Parse(memoryInfo?.FirstOrDefault(x => x.Key == "used_memory").Value ?? "0");
+                var usedMemoryMB = usedMemoryBytes / (1024.0 * 1024.0);
+                var memoryString = usedMemoryMB < 1 ? $"{usedMemoryBytes / 1024.0:F1} KB" : $"{usedMemoryMB:F1} MB";
+
+                // Parse clients
+                var connectedClients = int.Parse(clientsInfo?.FirstOrDefault(x => x.Key == "connected_clients").Value ?? "0");
+
+                // Parse stats
+                var totalCommands = long.Parse(statsInfo?.FirstOrDefault(x => x.Key == "total_commands_processed").Value ?? "0");
+                var keyspaceHits = long.Parse(statsInfo?.FirstOrDefault(x => x.Key == "keyspace_hits").Value ?? "0");
+                var keyspaceMisses = long.Parse(statsInfo?.FirstOrDefault(x => x.Key == "keyspace_misses").Value ?? "0");
+                var opsPerSec = int.Parse(statsInfo?.FirstOrDefault(x => x.Key == "instantaneous_ops_per_sec").Value ?? "0");
+
+                // Calculate hit rate
+                var totalKeyOps = keyspaceHits + keyspaceMisses;
+                var hitRate = totalKeyOps > 0 ? (keyspaceHits * 100.0 / totalKeyOps) : 0;
+
+                // Get total keys
+                var totalKeys = 0;
+                if (keyspaceInfo != null)
+                {
+                    foreach (var ks in keyspaceInfo)
+                    {
+                        var parts = ks.Value.Split(',');
+                        var keysPart = parts.FirstOrDefault(p => p.StartsWith("keys="));
+                        if (keysPart != null)
+                        {
+                            totalKeys += int.Parse(keysPart.Split('=')[1]);
+                        }
+                    }
+                }
+
+                connection.Close();
+
+                return Ok(new
+                {
+                    isConnected = true,
+                    usedMemory = memoryString,
+                    totalKeys,
+                    connectedClients,
+                    uptime = uptimeString,
+                    hitRate = $"{hitRate:F1}%",
+                    opsPerSec
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    isConnected = false,
+                    usedMemory = "N/A",
+                    totalKeys = 0,
+                    connectedClients = 0,
+                    uptime = "N/A",
+                    hitRate = "N/A",
+                    opsPerSec = 0,
                     error = ex.Message
                 });
             }
