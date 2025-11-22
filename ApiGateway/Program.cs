@@ -79,6 +79,17 @@ app.MapGet("/get-token", () => {
     return new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().WriteToken(token);
 });
 
+// Health endpoint for API Gateway
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "ApiGateway", timestamp = DateTime.UtcNow }));
+
+// Configure forwarded headers for downstream services
+app.Use(async (context, next) =>
+{
+    context.Request.Headers.Append("X-Forwarded-Host", context.Request.Host.Value);
+    context.Request.Headers.Append("X-Forwarded-Proto", context.Request.Scheme);
+    await next();
+});
+
 // Use Authentication middleware - IMPORTANT: Must be before UseOcelot()
 app.UseAuthentication();
 app.UseAuthorization();

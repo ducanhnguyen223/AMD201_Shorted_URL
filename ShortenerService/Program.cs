@@ -101,4 +101,49 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Health check endpoint
+app.MapGet("/api/health", async (ApplicationDbContext dbContext, IConfiguration configuration) =>
+{
+    var result = new
+    {
+        status = "healthy",
+        timestamp = DateTime.UtcNow,
+        database = "unknown",
+        redis = "unknown"
+    };
+
+    // Check database
+    try
+    {
+        await dbContext.Database.CanConnectAsync();
+        result = result with { database = "connected" };
+    }
+    catch
+    {
+        result = result with { database = "disconnected", status = "degraded" };
+    }
+
+    // Check Redis
+    try
+    {
+        var redisConnectionString = configuration.GetConnectionString("RedisConnection") ?? "localhost:6379";
+        var redis = StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString + ",abortConnect=false,connectTimeout=5000");
+        if (redis.IsConnected)
+        {
+            result = result with { redis = "connected" };
+        }
+        else
+        {
+            result = result with { redis = "disconnected" };
+        }
+        redis.Close();
+    }
+    catch
+    {
+        result = result with { redis = "disconnected" };
+    }
+
+    return Results.Ok(result);
+});
+
 app.Run();
