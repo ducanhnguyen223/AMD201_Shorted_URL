@@ -43,7 +43,7 @@ namespace ShortenerService.Features.Queries
                     s => s.ShortCode == request.ShortCode,
                     cancellationToken);
 
-            if (shortenedUrl == null)
+            if (shortenedUrl != null)
             {
                 // 3. Save to cache for next time
                 var options = new DistributedCacheEntryOptions()
