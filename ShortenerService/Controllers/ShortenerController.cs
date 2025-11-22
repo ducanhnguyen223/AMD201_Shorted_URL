@@ -43,10 +43,18 @@ namespace ShortenerService.Controllers
             {
                 var result = await _mediator.Send(command);
 
+                // Use gateway URL from configuration or request headers
+                var gatewayUrl = Request.Headers["X-Forwarded-Host"].FirstOrDefault()
+                    ?? Request.Headers["X-Original-Host"].FirstOrDefault()
+                    ?? Request.Host.Value;
+
+                var scheme = Request.Headers["X-Forwarded-Proto"].FirstOrDefault()
+                    ?? Request.Scheme;
+
                 var response = new
                 {
                     OriginalUrl = result.OriginalUrl,
-                    ShortUrl = $"{Request.Scheme}://{Request.Host}/{result.ShortCode}",
+                    ShortUrl = $"{scheme}://{gatewayUrl}/{result.ShortCode}",
                     ShortCode = result.ShortCode,
                     CustomAlias = result.CustomAlias
                 };
@@ -89,19 +97,28 @@ namespace ShortenerService.Controllers
             var urls = await _context.ShortenedUrls
                 .Where(u => u.UserId == userId)
                 .OrderByDescending(u => u.CreatedAt)
-                .Select(u => new
-                {
-                    u.Id,
-                    u.OriginalUrl,
-                    u.ShortCode,
-                    u.CustomAlias,
-                    u.CreatedAt,
-                    u.AccessCount,
-                    ShortUrl = $"{Request.Scheme}://{Request.Host}/{u.ShortCode}"
-                })
                 .ToListAsync();
 
-            return Ok(urls);
+            // Use gateway URL from configuration or request headers
+            var gatewayUrl = Request.Headers["X-Forwarded-Host"].FirstOrDefault()
+                ?? Request.Headers["X-Original-Host"].FirstOrDefault()
+                ?? Request.Host.Value;
+
+            var scheme = Request.Headers["X-Forwarded-Proto"].FirstOrDefault()
+                ?? Request.Scheme;
+
+            var result = urls.Select(u => new
+            {
+                u.Id,
+                u.OriginalUrl,
+                u.ShortCode,
+                u.CustomAlias,
+                u.CreatedAt,
+                u.AccessCount,
+                ShortUrl = $"{scheme}://{gatewayUrl}/{u.ShortCode}"
+            });
+
+            return Ok(result);
         }
 
         [HttpPut("urls/{id}")]
@@ -128,6 +145,14 @@ namespace ShortenerService.Controllers
             url.OriginalUrl = request.OriginalUrl;
             await _context.SaveChangesAsync();
 
+            // Use gateway URL from configuration or request headers
+            var gatewayUrl = Request.Headers["X-Forwarded-Host"].FirstOrDefault()
+                ?? Request.Headers["X-Original-Host"].FirstOrDefault()
+                ?? Request.Host.Value;
+
+            var scheme = Request.Headers["X-Forwarded-Proto"].FirstOrDefault()
+                ?? Request.Scheme;
+
             return Ok(new
             {
                 url.Id,
@@ -136,7 +161,7 @@ namespace ShortenerService.Controllers
                 url.CustomAlias,
                 url.CreatedAt,
                 url.AccessCount,
-                ShortUrl = $"{Request.Scheme}://{Request.Host}/{url.ShortCode}"
+                ShortUrl = $"{scheme}://{gatewayUrl}/{url.ShortCode}"
             });
         }
 

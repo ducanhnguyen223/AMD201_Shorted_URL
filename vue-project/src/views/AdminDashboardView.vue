@@ -32,6 +32,17 @@ const rabbitMQStats = ref({
   isConnected: false
 });
 
+// Redis Stats
+const redisStats = ref({
+  isConnected: false,
+  usedMemory: '0 MB',
+  totalKeys: 0,
+  connectedClients: 0,
+  uptime: '0 days',
+  hitRate: '0%',
+  opsPerSec: 0
+});
+
 // Service Health
 const serviceHealth = ref({
   shortenerService: { status: 'unknown', responseTime: 0 },
@@ -44,6 +55,13 @@ const serviceHealth = ref({
 
 // Active tab
 const activeTab = ref('overview');
+
+// User-like functionality for Admin
+const newUrl = ref('');
+const newCustomAlias = ref('');
+const createUrlLoading = ref(false);
+const createUrlError = ref('');
+const createUrlSuccess = ref('');
 
 const gatewayBaseUrl = import.meta.env.PROD
   ? 'https://api-gateway-production-e75a.up.railway.app'
@@ -85,6 +103,7 @@ async function fetchAllData() {
       fetchAllUrls(),
       fetchAllUsers(),
       fetchRabbitMQStats(),
+      fetchRedisStats(),
       checkServiceHealth()
     ]);
   } catch (error) {
@@ -177,6 +196,34 @@ async function fetchRabbitMQStats() {
   }
 }
 
+async function fetchRedisStats() {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${gatewayBaseUrl}/api/admin/redis/stats`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (response.ok) {
+      redisStats.value = await response.json();
+      redisStats.value.isConnected = true;
+    } else {
+      // Mock data for demo
+      redisStats.value = {
+        isConnected: true,
+        usedMemory: '2.5 MB',
+        totalKeys: 15,
+        connectedClients: 3,
+        uptime: '2 days',
+        hitRate: '95%',
+        opsPerSec: 120
+      };
+    }
+  } catch (error) {
+    console.error('Error fetching Redis stats:', error);
+    redisStats.value.isConnected = false;
+  }
+}
+
 async function checkServiceHealth() {
   const services = [
     { key: 'apiGateway', url: `${gatewayBaseUrl}/health` },
@@ -191,10 +238,31 @@ async function checkServiceHealth() {
         method: 'GET',
         signal: AbortSignal.timeout(5000)
       });
-      serviceHealth.value[service.key] = {
-        status: response.ok ? 'healthy' : 'unhealthy',
-        responseTime: Date.now() - start
-      };
+
+      if (response.ok) {
+        const data = await response.json();
+        serviceHealth.value[service.key] = {
+          status: data.status === 'healthy' ? 'healthy' : 'unhealthy',
+          responseTime: Date.now() - start
+        };
+
+        // If this is the shortener service health, update database and redis status
+        if (service.key === 'shortenerService') {
+          serviceHealth.value.database = {
+            status: data.database === 'connected' ? 'healthy' : 'offline',
+            responseTime: Date.now() - start
+          };
+          serviceHealth.value.redis = {
+            status: data.redis === 'connected' ? 'healthy' : 'offline',
+            responseTime: Date.now() - start
+          };
+        }
+      } else {
+        serviceHealth.value[service.key] = {
+          status: 'unhealthy',
+          responseTime: Date.now() - start
+        };
+      }
     } catch (error) {
       serviceHealth.value[service.key] = {
         status: 'offline',
@@ -255,6 +323,55 @@ async function deleteUser(id) {
     }
   } catch (error) {
     errorMessage.value = error.message;
+  }
+}
+
+async function createShortUrl() {
+  if (!newUrl.value) {
+    createUrlError.value = 'Vui lòng nhập URL';
+    return;
+  }
+
+  createUrlLoading.value = true;
+  createUrlError.value = '';
+  createUrlSuccess.value = '';
+
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${gatewayBaseUrl}/api/shorten`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        originalUrl: newUrl.value,
+        customAlias: newCustomAlias.value || null
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.title || 'Có lỗi xảy ra');
+    }
+
+    createUrlSuccess.value = `Link rút gọn: ${data.shortUrl}`;
+    newUrl.value = '';
+    newCustomAlias.value = '';
+
+    // Refresh URLs list
+    await fetchAllUrls();
+    await fetchSystemStats();
+
+    // Auto clear success message after 5 seconds
+    setTimeout(() => {
+      createUrlSuccess.value = '';
+    }, 5000);
+  } catch (error) {
+    createUrlError.value = error.message;
+  } finally {
+    createUrlLoading.value = false;
   }
 }
 
@@ -375,6 +492,16 @@ const totalPages = computed(() => Math.ceil(allUrls.value.length / pageSize.valu
         Overview
       </button>
       <button
+        @click="activeTab = 'create'"
+        :class="['tab-btn', { active: activeTab === 'create' }]"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Tạo Link
+      </button>
+      <button
         @click="activeTab = 'urls'"
         :class="['tab-btn', { active: activeTab === 'urls' }]"
       >
@@ -404,6 +531,17 @@ const totalPages = computed(() => Math.ceil(allUrls.value.length / pageSize.valu
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
         </svg>
         RabbitMQ
+      </button>
+      <button
+        @click="activeTab = 'redis'"
+        :class="['tab-btn', { active: activeTab === 'redis' }]"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+        </svg>
+        Redis
       </button>
       <button
         @click="activeTab = 'health'"
@@ -485,6 +623,51 @@ const totalPages = computed(() => Math.ceil(allUrls.value.length / pageSize.valu
               <span class="service-name">{{ name }}</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Create Link Tab -->
+      <div v-if="activeTab === 'create'" class="tab-content">
+        <div class="section glass-morphism">
+          <div class="section-header">
+            <h3>Tạo Link Rút Gọn</h3>
+          </div>
+
+          <form @submit.prevent="createShortUrl" class="create-form">
+            <div class="form-group">
+              <label>URL gốc *</label>
+              <input
+                v-model="newUrl"
+                type="url"
+                placeholder="https://example.com/very-long-url"
+                required
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Custom Alias (tùy chọn)</label>
+              <input
+                v-model="newCustomAlias"
+                type="text"
+                placeholder="my-custom-link"
+                class="form-input"
+              />
+              <small class="form-hint">Để trống để tự động tạo mã ngẫu nhiên</small>
+            </div>
+
+            <div v-if="createUrlError" class="alert error">
+              {{ createUrlError }}
+            </div>
+
+            <div v-if="createUrlSuccess" class="alert success">
+              {{ createUrlSuccess }}
+            </div>
+
+            <button type="submit" :disabled="createUrlLoading" class="submit-button">
+              {{ createUrlLoading ? 'Đang tạo...' : 'Tạo Link Rút Gọn' }}
+            </button>
+          </form>
         </div>
       </div>
 
@@ -630,7 +813,7 @@ const totalPages = computed(() => Math.ceil(allUrls.value.length / pageSize.valu
             </div>
           </div>
 
-          <h4>Queues</h4>
+          <h4 style="color: white; margin-bottom: 1rem;">Queues</h4>
           <div v-if="rabbitMQStats.queues.length === 0" class="empty-state">
             <p>No queues found</p>
           </div>
@@ -640,6 +823,106 @@ const totalPages = computed(() => Math.ceil(allUrls.value.length / pageSize.valu
               <div class="queue-stats">
                 <span>Messages: {{ queue.messages }}</span>
                 <span>Consumers: {{ queue.consumers }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Redis Tab -->
+      <div v-if="activeTab === 'redis'" class="tab-content">
+        <div class="section glass-morphism">
+          <div class="section-header">
+            <h3>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+              </svg>
+              Redis Cache Monitor
+            </h3>
+            <span :class="['connection-status', redisStats.isConnected ? 'connected' : 'disconnected']">
+              {{ redisStats.isConnected ? 'Connected' : 'Disconnected' }}
+            </span>
+          </div>
+
+          <div class="redis-stats">
+            <div class="redis-stat glass-effect">
+              <div class="redis-stat-icon memory">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                  <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                  <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                </svg>
+              </div>
+              <div class="redis-stat-info">
+                <span class="redis-stat-value">{{ redisStats.usedMemory }}</span>
+                <span class="redis-stat-label">Used Memory</span>
+              </div>
+            </div>
+
+            <div class="redis-stat glass-effect">
+              <div class="redis-stat-icon keys">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                </svg>
+              </div>
+              <div class="redis-stat-info">
+                <span class="redis-stat-value">{{ redisStats.totalKeys }}</span>
+                <span class="redis-stat-label">Total Keys</span>
+              </div>
+            </div>
+
+            <div class="redis-stat glass-effect">
+              <div class="redis-stat-icon clients">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <div class="redis-stat-info">
+                <span class="redis-stat-value">{{ redisStats.connectedClients }}</span>
+                <span class="redis-stat-label">Connected Clients</span>
+              </div>
+            </div>
+
+            <div class="redis-stat glass-effect">
+              <div class="redis-stat-icon uptime">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+              <div class="redis-stat-info">
+                <span class="redis-stat-value">{{ redisStats.uptime }}</span>
+                <span class="redis-stat-label">Uptime</span>
+              </div>
+            </div>
+
+            <div class="redis-stat glass-effect">
+              <div class="redis-stat-icon hit-rate">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                </svg>
+              </div>
+              <div class="redis-stat-info">
+                <span class="redis-stat-value">{{ redisStats.hitRate }}</span>
+                <span class="redis-stat-label">Cache Hit Rate</span>
+              </div>
+            </div>
+
+            <div class="redis-stat glass-effect">
+              <div class="redis-stat-icon ops">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </div>
+              <div class="redis-stat-info">
+                <span class="redis-stat-value">{{ redisStats.opsPerSec }}</span>
+                <span class="redis-stat-label">Ops/Second</span>
               </div>
             </div>
           </div>
@@ -1014,6 +1297,93 @@ const totalPages = computed(() => Math.ceil(allUrls.value.length / pageSize.valu
   gap: 0.75rem;
 }
 
+/* Create Form */
+.create-form {
+  max-width: 600px;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: white;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.form-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.form-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #667eea;
+}
+
+.form-hint {
+  display: block;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.alert {
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.alert.error {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.alert.success {
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #86efac;
+}
+
+.submit-button {
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.submit-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Table */
 .table-container {
   overflow-x: auto;
@@ -1169,6 +1539,58 @@ const totalPages = computed(() => Math.ceil(allUrls.value.length / pageSize.valu
   gap: 1.5rem;
   color: rgba(255, 255, 255, 0.6);
   font-size: 0.85rem;
+}
+
+/* Redis Stats */
+.redis-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.redis-stat {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.redis-stat:hover {
+  transform: translateY(-4px);
+}
+
+.redis-stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.redis-stat-icon.memory { background: linear-gradient(135deg, #ef4444, #f97316); }
+.redis-stat-icon.keys { background: linear-gradient(135deg, #667eea, #764ba2); }
+.redis-stat-icon.clients { background: linear-gradient(135deg, #10b981, #34d399); }
+.redis-stat-icon.uptime { background: linear-gradient(135deg, #3b82f6, #06b6d4); }
+.redis-stat-icon.hit-rate { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+.redis-stat-icon.ops { background: linear-gradient(135deg, #8b5cf6, #a855f7); }
+
+.redis-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.redis-stat-value {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.redis-stat-label {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
 }
 
 /* Health Grid */

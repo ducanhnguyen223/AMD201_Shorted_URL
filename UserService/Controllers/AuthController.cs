@@ -56,5 +56,11 @@ namespace UserService.Controllers
                 return Unauthorized(new { message = ex.Message });
             }
         }
+
+        [HttpGet("health")]
+        public IActionResult Health()
+        {
+            return Ok(new { status = "healthy", service = "UserService", timestamp = DateTime.UtcNow });
+        }
     }
 }

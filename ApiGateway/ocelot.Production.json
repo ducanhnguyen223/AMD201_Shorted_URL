@@ -85,6 +85,18 @@
       ]
     },
     {
+      "UpstreamPathTemplate": "/api/admin/redis/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/admin/redis/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "shortenner-service-production.up.railway.app",
+          "Port": 443
+        }
+      ]
+    },
+    {
       "UpstreamPathTemplate": "/api/shorten",
       "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/shorten",
