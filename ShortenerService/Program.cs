@@ -124,23 +124,33 @@ app.MapGet("/api/health", async (ApplicationDbContext dbContext, IConfiguration 
     }
 
     // Check Redis
+    string redisError = "";
     try
     {
-        var redisConnectionString = configuration.GetConnectionString("RedisConnection") ?? "localhost:6379";
-        var redis = StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString + ",abortConnect=false,connectTimeout=5000");
-        if (redis.IsConnected)
+        var redisConnectionString = configuration.GetConnectionString("RedisConnection");
+
+        if (string.IsNullOrEmpty(redisConnectionString))
         {
-            result = result with { redis = "connected" };
+            result = result with { redis = "not_configured" };
         }
         else
         {
-            result = result with { redis = "disconnected" };
+            var redis = StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString + ",abortConnect=false,connectTimeout=10000,connectRetry=3");
+            if (redis.IsConnected)
+            {
+                result = result with { redis = "connected" };
+            }
+            else
+            {
+                result = result with { redis = "disconnected" };
+            }
+            redis.Close();
         }
-        redis.Close();
     }
-    catch
+    catch (Exception ex)
     {
-        result = result with { redis = "disconnected" };
+        redisError = ex.Message;
+        result = result with { redis = $"error: {ex.Message}" };
     }
 
     return Results.Ok(result);
