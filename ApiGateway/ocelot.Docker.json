@@ -22,7 +22,10 @@
           "Host": "user-service",
           "Port": 8080
         }
-      ]
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
     {
       "UpstreamPathTemplate": "/api/admin/users",
@@ -34,7 +37,10 @@
           "Host": "user-service",
           "Port": 8080
         }
-      ]
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
     {
       "UpstreamPathTemplate": "/api/admin/stats",
@@ -46,7 +52,13 @@
           "Host": "shortener-service",
           "Port": 8080
         }
-      ]
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "AddHeadersToRequest": {
+        "Authorization": "Bearer {token}"
+      }
     },
     {
       "UpstreamPathTemplate": "/api/admin/urls",
@@ -58,7 +70,10 @@
           "Host": "shortener-service",
           "Port": 8080
         }
-      ]
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
     {
       "UpstreamPathTemplate": "/api/admin/urls/{everything}",
@@ -70,7 +85,10 @@
           "Host": "shortener-service",
           "Port": 8080
         }
-      ]
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
     {
       "UpstreamPathTemplate": "/api/admin/rabbitmq/{everything}",

@@ -87,6 +87,9 @@ services:
       - RabbitMQ__Port=5672
       - RabbitMQ__UserName=guest
       - RabbitMQ__Password=guest
+      - JwtSettings__Secret=THIS_IS_A_VERY_LONG_AND_STRONG_SECRET_KEY_FOR_JWT_AUTHENTICATION_AND_MUST_BE_KEPT_CONFIDENTIAL
+      - JwtSettings__Issuer=ShortenerApp
+      - JwtSettings__Audience=ShortenerApp.Client
     ports:
       - "5126:8080"
     depends_on:
