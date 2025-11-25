@@ -39,7 +39,18 @@
 *.VC.db
 *.VC.VC.opendb
 
+# Report files
+*.md
+!README.md
+*.pdf
+*.pptx
+*.docx
+
 # Ignored Folders
 AMD201_Merterial/
+Merterial/
 report/
 nul
+
+# Claude settings
+.claude/
