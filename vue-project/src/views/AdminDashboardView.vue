@@ -23,34 +23,12 @@ const pageSize = ref(10);
 // All Users
 const allUsers = ref([]);
 
-// RabbitMQ Stats
-const rabbitMQStats = ref({
-  queues: [],
-  connections: 0,
-  channels: 0,
-  messages: 0,
-  isConnected: false
-});
-
-// Redis Stats
-const redisStats = ref({
-  isConnected: false,
-  usedMemory: '0 MB',
-  totalKeys: 0,
-  connectedClients: 0,
-  uptime: '0 days',
-  hitRate: '0%',
-  opsPerSec: 0
-});
-
 // Service Health
 const serviceHealth = ref({
   shortenerService: { status: 'unknown', responseTime: 0 },
   userService: { status: 'unknown', responseTime: 0 },
   apiGateway: { status: 'unknown', responseTime: 0 },
-  database: { status: 'unknown', responseTime: 0 },
-  redis: { status: 'unknown', responseTime: 0 },
-  rabbitMQ: { status: 'unknown', responseTime: 0 }
+  database: { status: 'unknown', responseTime: 0 }
 });
 
 // Active tab
@@ -102,8 +80,6 @@ async function fetchAllData() {
       fetchSystemStats(),
       fetchAllUrls(),
       fetchAllUsers(),
-      fetchRabbitMQStats(),
-      fetchRedisStats(),
       checkServiceHealth()
     ]);
   } catch (error) {
@@ -167,63 +143,6 @@ async function fetchAllUsers() {
   }
 }
 
-async function fetchRabbitMQStats() {
-  try {
-    const token = localStorage.getItem('authToken');
-    const response = await fetch(`${gatewayBaseUrl}/api/admin/rabbitmq/stats`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-
-    if (response.ok) {
-      rabbitMQStats.value = await response.json();
-      rabbitMQStats.value.isConnected = true;
-    } else {
-      // Mock data for demo
-      rabbitMQStats.value = {
-        queues: [
-          { name: 'link_created', messages: 0, consumers: 1 },
-          { name: 'analytics_events', messages: 5, consumers: 1 }
-        ],
-        connections: 2,
-        channels: 4,
-        messages: 5,
-        isConnected: true
-      };
-    }
-  } catch (error) {
-    console.error('Error fetching RabbitMQ stats:', error);
-    rabbitMQStats.value.isConnected = false;
-  }
-}
-
-async function fetchRedisStats() {
-  try {
-    const token = localStorage.getItem('authToken');
-    const response = await fetch(`${gatewayBaseUrl}/api/admin/redis/stats`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-
-    if (response.ok) {
-      redisStats.value = await response.json();
-      redisStats.value.isConnected = true;
-    } else {
-      // Mock data for demo
-      redisStats.value = {
-        isConnected: true,
-        usedMemory: '2.5 MB',
-        totalKeys: 15,
-        connectedClients: 3,
-        uptime: '2 days',
-        hitRate: '95%',
-        opsPerSec: 120
-      };
-    }
-  } catch (error) {
-    console.error('Error fetching Redis stats:', error);
-    redisStats.value.isConnected = false;
-  }
-}
-
 async function checkServiceHealth() {
   const services = [
     { key: 'apiGateway', url: `${gatewayBaseUrl}/health` },
@@ -246,14 +165,10 @@ async function checkServiceHealth() {
           responseTime: Date.now() - start
         };
 
-        // If this is the shortener service health, update database and redis status
+        // If this is the shortener service health, update database status
         if (service.key === 'shortenerService') {
           serviceHealth.value.database = {
             status: data.database === 'connected' ? 'healthy' : 'offline',
-            responseTime: Date.now() - start
-          };
-          serviceHealth.value.redis = {
-            status: data.redis === 'connected' ? 'healthy' : 'offline',
             responseTime: Date.now() - start
           };
         }
@@ -270,12 +185,6 @@ async function checkServiceHealth() {
       };
     }
   }
-
-  // Check RabbitMQ
-  serviceHealth.value.rabbitMQ = {
-    status: rabbitMQStats.value.isConnected ? 'healthy' : 'offline',
-    responseTime: rabbitMQStats.value.isConnected ? 50 : 0
-  };
 }
 
 async function deleteUrl(id) {
@@ -524,26 +433,6 @@ const totalPages = computed(() => Math.ceil(allUrls.value.length / pageSize.valu
         Users
       </button>
       <button
-        @click="activeTab = 'rabbitmq'"
-        :class="['tab-btn', { active: activeTab === 'rabbitmq' }]"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-        </svg>
-        RabbitMQ
-      </button>
-      <button
-        @click="activeTab = 'redis'"
-        :class="['tab-btn', { active: activeTab === 'redis' }]"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-        </svg>
-        Redis
-      </button>
-      <button
         @click="activeTab = 'health'"
         :class="['tab-btn', { active: activeTab === 'health' }]"
       >
@@ -779,152 +668,6 @@ const totalPages = computed(() => Math.ceil(allUrls.value.length / pageSize.valu
                 </tr>
               </tbody>
             </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- RabbitMQ Tab -->
-      <div v-if="activeTab === 'rabbitmq'" class="tab-content">
-        <div class="section glass-morphism">
-          <div class="section-header">
-            <h3>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-              </svg>
-              RabbitMQ Monitor
-            </h3>
-            <span :class="['connection-status', rabbitMQStats.isConnected ? 'connected' : 'disconnected']">
-              {{ rabbitMQStats.isConnected ? 'Connected' : 'Disconnected' }}
-            </span>
-          </div>
-
-          <div class="rabbitmq-stats">
-            <div class="mq-stat">
-              <span class="mq-label">Connections</span>
-              <span class="mq-value">{{ rabbitMQStats.connections }}</span>
-            </div>
-            <div class="mq-stat">
-              <span class="mq-label">Channels</span>
-              <span class="mq-value">{{ rabbitMQStats.channels }}</span>
-            </div>
-            <div class="mq-stat">
-              <span class="mq-label">Messages</span>
-              <span class="mq-value">{{ rabbitMQStats.messages }}</span>
-            </div>
-          </div>
-
-          <h4 style="color: white; margin-bottom: 1rem;">Queues</h4>
-          <div v-if="rabbitMQStats.queues.length === 0" class="empty-state">
-            <p>No queues found</p>
-          </div>
-          <div v-else class="queue-list">
-            <div v-for="queue in rabbitMQStats.queues" :key="queue.name" class="queue-item glass-effect">
-              <div class="queue-name">{{ queue.name }}</div>
-              <div class="queue-stats">
-                <span>Messages: {{ queue.messages }}</span>
-                <span>Consumers: {{ queue.consumers }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Redis Tab -->
-      <div v-if="activeTab === 'redis'" class="tab-content">
-        <div class="section glass-morphism">
-          <div class="section-header">
-            <h3>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-              </svg>
-              Redis Cache Monitor
-            </h3>
-            <span :class="['connection-status', redisStats.isConnected ? 'connected' : 'disconnected']">
-              {{ redisStats.isConnected ? 'Connected' : 'Disconnected' }}
-            </span>
-          </div>
-
-          <div class="redis-stats">
-            <div class="redis-stat glass-effect">
-              <div class="redis-stat-icon memory">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-                  <line x1="6" y1="6" x2="6.01" y2="6"></line>
-                  <line x1="6" y1="18" x2="6.01" y2="18"></line>
-                </svg>
-              </div>
-              <div class="redis-stat-info">
-                <span class="redis-stat-value">{{ redisStats.usedMemory }}</span>
-                <span class="redis-stat-label">Used Memory</span>
-              </div>
-            </div>
-
-            <div class="redis-stat glass-effect">
-              <div class="redis-stat-icon keys">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
-                </svg>
-              </div>
-              <div class="redis-stat-info">
-                <span class="redis-stat-value">{{ redisStats.totalKeys }}</span>
-                <span class="redis-stat-label">Total Keys</span>
-              </div>
-            </div>
-
-            <div class="redis-stat glass-effect">
-              <div class="redis-stat-icon clients">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-              </div>
-              <div class="redis-stat-info">
-                <span class="redis-stat-value">{{ redisStats.connectedClients }}</span>
-                <span class="redis-stat-label">Connected Clients</span>
-              </div>
-            </div>
-
-            <div class="redis-stat glass-effect">
-              <div class="redis-stat-icon uptime">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-              </div>
-              <div class="redis-stat-info">
-                <span class="redis-stat-value">{{ redisStats.uptime }}</span>
-                <span class="redis-stat-label">Uptime</span>
-              </div>
-            </div>
-
-            <div class="redis-stat glass-effect">
-              <div class="redis-stat-icon hit-rate">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                </svg>
-              </div>
-              <div class="redis-stat-info">
-                <span class="redis-stat-value">{{ redisStats.hitRate }}</span>
-                <span class="redis-stat-label">Cache Hit Rate</span>
-              </div>
-            </div>
-
-            <div class="redis-stat glass-effect">
-              <div class="redis-stat-icon ops">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-              </div>
-              <div class="redis-stat-info">
-                <span class="redis-stat-value">{{ redisStats.opsPerSec }}</span>
-                <span class="redis-stat-label">Ops/Second</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
