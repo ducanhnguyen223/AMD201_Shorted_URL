@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UserService.Data;
+using System.Security.Claims;
 
 namespace UserService.Controllers
 {
@@ -17,13 +18,18 @@ namespace UserService.Controllers
             _context = context;
         }
 
+        // Helper method to check admin role
+        private bool IsAdmin()
+        {
+            var roleClaim = User.FindFirst(ClaimTypes.Role) ?? User.FindFirst("role");
+            return roleClaim?.Value == "Admin";
+        }
+
         // GET /api/admin/users - Lấy tất cả users
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()
         {
-            // Check if user is admin
-            var roleClaim = User.FindFirst("role");
-            if (roleClaim == null || roleClaim.Value != "Admin")
+            if (!IsAdmin())
             {
                 return Forbid();
             }
@@ -47,9 +53,7 @@ namespace UserService.Controllers
         [HttpDelete("users/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            // Check if user is admin
-            var roleClaim = User.FindFirst("role");
-            if (roleClaim == null || roleClaim.Value != "Admin")
+            if (!IsAdmin())
             {
                 return Forbid();
             }
@@ -80,9 +84,7 @@ namespace UserService.Controllers
         [HttpGet("users/stats")]
         public async Task<IActionResult> GetUserStats()
         {
-            // Check if user is admin
-            var roleClaim = User.FindFirst("role");
-            if (roleClaim == null || roleClaim.Value != "Admin")
+            if (!IsAdmin())
             {
                 return Forbid();
             }

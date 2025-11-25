@@ -6,6 +6,7 @@ using ShortenerService.Data;
 using RabbitMQ.Client;
 using StackExchange.Redis;
 using System.Text.Json;
+using System.Security.Claims;
 
 namespace ShortenerService.Controllers
 {
@@ -23,46 +24,62 @@ namespace ShortenerService.Controllers
             _configuration = configuration;
         }
 
+        // Helper method to check admin role
+        private bool IsAdmin()
+        {
+            var roleClaim = User.FindFirst(ClaimTypes.Role) ?? User.FindFirst("role");
+            return roleClaim?.Value == "Admin";
+        }
+
         // GET /api/admin/stats - Thống kê hệ thống
         [HttpGet("stats")]
         public async Task<IActionResult> GetStats()
         {
-            // Check if user is admin
-            var roleClaim = User.FindFirst("role");
-            if (roleClaim == null || roleClaim.Value != "Admin")
+            try
             {
-                return Forbid();
+                if (!IsAdmin())
+                {
+                    return Forbid();
+                }
+
+                var totalUrls = await _context.ShortenedUrls.CountAsync();
+                var totalClicks = totalUrls > 0
+                    ? await _context.ShortenedUrls.SumAsync(u => u.AccessCount)
+                    : 0;
+
+                var today = DateTime.UtcNow.Date;
+                var tomorrow = today.AddDays(1);
+                var todayUrls = await _context.ShortenedUrls
+                    .Where(u => u.CreatedAt >= today && u.CreatedAt < tomorrow)
+                    .CountAsync();
+
+                // Get unique user count from URLs created by users
+                var totalUsers = await _context.ShortenedUrls
+                    .Where(u => u.UserId != null)
+                    .Select(u => u.UserId)
+                    .Distinct()
+                    .CountAsync();
+
+                return Ok(new
+                {
+                    totalUrls,
+                    totalUsers,
+                    totalClicks,
+                    todayUrls
+                });
             }
-
-            var totalUrls = await _context.ShortenedUrls.CountAsync();
-            var totalClicks = await _context.ShortenedUrls.SumAsync(u => u.AccessCount);
-            var todayUrls = await _context.ShortenedUrls
-                .Where(u => u.CreatedAt.Date == DateTime.UtcNow.Date)
-                .CountAsync();
-
-            // Get unique user count
-            var totalUsers = await _context.ShortenedUrls
-                .Where(u => u.UserId != null)
-                .Select(u => u.UserId)
-                .Distinct()
-                .CountAsync();
-
-            return Ok(new
+            catch (Exception ex)
             {
-                totalUrls,
-                totalUsers,
-                totalClicks,
-                todayUrls
-            });
+                Console.WriteLine($"Error in GetStats: {ex.Message}");
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // GET /api/admin/urls - Lấy tất cả URLs
         [HttpGet("urls")]
         public async Task<IActionResult> GetAllUrls()
         {
-            // Check if user is admin
-            var roleClaim = User.FindFirst("role");
-            if (roleClaim == null || roleClaim.Value != "Admin")
+            if (!IsAdmin())
             {
                 return Forbid();
             }
@@ -98,9 +115,7 @@ namespace ShortenerService.Controllers
         [HttpDelete("urls/{id}")]
         public async Task<IActionResult> DeleteUrl(long id)
         {
-            // Check if user is admin
-            var roleClaim = User.FindFirst("role");
-            if (roleClaim == null || roleClaim.Value != "Admin")
+            if (!IsAdmin())
             {
                 return Forbid();
             }

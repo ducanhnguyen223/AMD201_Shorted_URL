@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using ShortenerService.Features.Queries;
+using ShortenerService.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace ShortenerService.Controllers
 {
@@ -9,10 +11,12 @@ namespace ShortenerService.Controllers
     public class RedirectController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly ApplicationDbContext _context;
 
-        public RedirectController(IMediator mediator)
+        public RedirectController(IMediator mediator, ApplicationDbContext context)
         {
             _mediator = mediator;
+            _context = context;
         }
 
         [HttpGet("{shortCode}")]
@@ -28,8 +32,14 @@ namespace ShortenerService.Controllers
                     return NotFound();
                 }
 
-                // In a real application, you might want to increment AccessCount here and save to DB.
-                // For now, just redirect.
+                // Increment access count
+                var url = await _context.ShortenedUrls.FirstOrDefaultAsync(u => u.ShortCode == shortCode);
+                if (url != null)
+                {
+                    url.AccessCount++;
+                    await _context.SaveChangesAsync();
+                }
+
                 return Redirect(result.OriginalUrl);
             }
             catch (Exception ex)

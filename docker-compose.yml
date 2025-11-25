@@ -87,6 +87,9 @@ services:
       - RabbitMQ__Port=5672
       - RabbitMQ__UserName=guest
       - RabbitMQ__Password=guest
+      - JwtSettings__Secret=***REMOVED***
+      - JwtSettings__Issuer=ShortenerApp
+      - JwtSettings__Audience=ShortenerApp.Client
     ports:
       - "5126:8080"
     depends_on:
