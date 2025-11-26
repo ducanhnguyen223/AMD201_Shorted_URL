@@ -592,7 +592,11 @@ const totalPages = computed(() => Math.ceil(allUrls.value.length / pageSize.valu
                       {{ url.shortCode }}
                     </a>
                   </td>
-                  <td :title="url.originalUrl">{{ truncateUrl(url.originalUrl, 40) }}</td>
+                  <td>
+                    <a :href="url.originalUrl" target="_blank" :title="url.originalUrl" class="original-url">
+                      {{ truncateUrl(url.originalUrl, 40) }}
+                    </a>
+                  </td>
                   <td>{{ url.userId || 'Anonymous' }}</td>
                   <td>{{ url.accessCount }}</td>
                   <td>{{ formatDate(url.createdAt) }}</td>
@@ -1160,9 +1164,22 @@ const totalPages = computed(() => Math.ceil(allUrls.value.length / pageSize.valu
   color: #667eea;
   text-decoration: none;
   font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .short-code:hover {
+  text-decoration: underline;
+  color: #764ba2;
+}
+
+.original-url {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.original-url:hover {
+  color: #4facfe;
   text-decoration: underline;
 }
 
