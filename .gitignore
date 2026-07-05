@@ -54,3 +54,4 @@ nul
 
 # Claude settings
 .claude/
+.env

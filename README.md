@@ -464,12 +464,7 @@ Result: Zero-downtime deployment
 
 ### Production Admin Credentials
 
-```
-Email:    ***REMOVED***
-Password: ***REMOVED***
-```
-
-> ⚠️ **Security Note:** Change default credentials in production
+Not published here. Contact the maintainer for access, or register an account via the live demo.
 
 ---
 

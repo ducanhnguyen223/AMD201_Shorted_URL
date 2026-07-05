@@ -62,7 +62,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=UserDB;Username=postgres;Password=postgres
-      - JwtSettings__Secret=***REMOVED***
+      - JwtSettings__Secret=${JWT_SECRET}
       - JwtSettings__Issuer=ShortenerApp
       - JwtSettings__Audience=ShortenerApp.Client
     ports:
@@ -87,7 +87,7 @@ services:
       - RabbitMQ__Port=5672
       - RabbitMQ__UserName=guest
       - RabbitMQ__Password=guest
-      - JwtSettings__Secret=***REMOVED***
+      - JwtSettings__Secret=${JWT_SECRET}
       - JwtSettings__Issuer=ShortenerApp
       - JwtSettings__Audience=ShortenerApp.Client
     ports:
@@ -110,7 +110,7 @@ services:
     container_name: api-gateway
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - JwtSettings__Secret=***REMOVED***
+      - JwtSettings__Secret=${JWT_SECRET}
       - JwtSettings__Issuer=ShortenerApp
       - JwtSettings__Audience=ShortenerApp.Client
     ports:
