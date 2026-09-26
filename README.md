@@ -10,7 +10,7 @@
 [![Redis](https://img.shields.io/badge/Redis-Alpine-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
-[Live Demo](https://amd201shortedurl-production.up.railway.app/) • [API Docs](#api-documentation) • [Architecture](#architecture)
+[Deployment status](#-deployment-status) • [API Docs](#api-documentation) • [Architecture](#architecture)
 
 </div>
 
@@ -26,7 +26,7 @@
 - [📡 API Documentation](#-api-documentation)
 - [🔐 Authentication](#-authentication)
 - [🎯 Admin Dashboard](#-admin-dashboard)
-- [🌐 Production](#-production)
+- [🌐 Deployment status](#-deployment-status)
 - [👥 Team](#-team)
 
 ---
@@ -40,11 +40,11 @@
 | 🔗 **URL Shortening** | Convert long URLs into short, shareable links |
 | 🎯 **Custom Aliases** | Create personalized short codes for your URLs |
 | 📊 **Analytics** | Track clicks and access statistics for each URL |
-| 🔐 **Authentication** | Secure JWT-based user authentication system |
-| 👨‍💼 **Admin Dashboard** | Comprehensive management interface for admins |
-| ⚡ **Redis Caching** | Fast response times with distributed caching |
-| 🐳 **Containerized** | Full Docker support for easy deployment |
-| 🔄 **CI/CD Pipeline** | Automated builds and deployments with GitHub Actions |
+| 🔐 **Authentication** | JWT authentication with BCrypt password hashing |
+| 👨‍💼 **Admin Dashboard** | Admin routes and a dashboard for user/URL management |
+| ⚡ **Redis Caching** | Redis integration for URL lookup caching |
+| 🐳 **Containerized** | Multi-service local setup with Docker Compose |
+| 🔄 **Build workflow** | GitHub Actions build workflow with a GHCR image-publishing job |
 
 </div>
 
@@ -184,19 +184,9 @@ docker-compose ps
 # RabbitMQ:    http://localhost:15672
 ```
 
-### Default Credentials
+### Demo accounts
 
-**Admin Account:**
-```
-Email:    admin@admin.com
-Password: admin123
-```
-
-**Test User:**
-```
-Email:    user@test.com
-Password: user123
-```
+No demo users are seeded by the repository. Registration creates a regular `User` account; the repository does not include an admin bootstrap flow. Admin routes require an account with the `Admin` role.
 
 ---
 
@@ -226,7 +216,6 @@ ENTRYPOINT ["dotnet", "Service.dll"]
 - ✅ Smaller image size (runtime only, no SDK)
 - ✅ Consistent environments
 - ✅ Fast builds with layer caching
-- ✅ Production-ready security
 
 ### Docker Compose Services
 
@@ -249,8 +238,9 @@ services:
 
 ```
 Local:      http://localhost:5000
-Production: https://api-gateway-production-e75a.up.railway.app
 ```
+
+The previously listed Railway endpoint returned HTTP 404 on 2026-09-27; no live base URL is currently verified.
 
 ### Authentication Endpoints
 
@@ -391,8 +381,7 @@ Response:
 
 ### Token Expiration
 
-- **User Tokens:** 7 days
-- **Admin Tokens:** 7 days
+- **User and Admin Tokens:** 24 hours
 - **Refresh:** Login again when expired
 
 ### Role-Based Authorization
@@ -432,39 +421,11 @@ Response:
 
 ---
 
-## 🌐 Production
+## 🌐 Deployment status
 
-### Live Deployment
+The Railway application and API health-check URLs listed in earlier versions returned HTTP 404 when checked on 2026-09-27. No live deployment is currently verified; use the local Docker Compose instructions above.
 
-**🌍 Application:**
-https://amd201shortedurl-production.up.railway.app/
-
-**🔍 API Health Check:**
-https://api-gateway-production-e75a.up.railway.app/health
-
-**📦 Docker Images:**
-- Frontend: [panadol233/amd201-frontend](https://hub.docker.com/r/panadol233/amd201-frontend)
-- API Gateway: [panadol233/amd201-api-gateway](https://hub.docker.com/r/panadol233/amd201-api-gateway)
-- User Service: [panadol233/amd201-user-service](https://hub.docker.com/r/panadol233/amd201-user-service)
-- Shortener Service: [panadol233/amd201-shortener-service](https://hub.docker.com/r/panadol233/amd201-shortener-service)
-
-### CI/CD Pipeline
-
-**GitHub Actions Workflow:**
-
-```yaml
-Trigger: Push to master branch
-Steps:
-  1. Build Docker images
-  2. Tag with latest + commit SHA
-  3. Push to Docker Hub
-  4. Railway auto-deploys
-Result: Zero-downtime deployment
-```
-
-### Production Admin Credentials
-
-Not published here. Contact the maintainer for access, or register an account via the live demo.
+The current [GitHub Actions workflow](.github/workflows/ci-cd.yml) restores and builds `ShortenerService` and `ApiGateway`. On pushes to `main` or `master`, it is configured to publish `ShortenerService`, `ApiGateway` and the frontend images to GHCR. It does not run a test suite, build or publish the `UserService` image, or deploy to Railway.
 
 ---
 
